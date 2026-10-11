@@ -65,7 +65,11 @@ def build_clump(asset, data):
             elif g.prelit_colors:
                 attr=nodes.new('ShaderNodeVertexColor');attr.layer_name='NativeColor';links.new(attr.outputs['Color'],bs.inputs['Base Color'])
             mesh.materials.append(m)
-        uv=mesh.uv_layers.new(name='UVMap');colors=mesh.color_attributes.new(name='NativeColor',type='BYTE_COLOR',domain='CORNER')
+        mesh.uv_layers.new(name='UVMap')
+        colors=mesh.color_attributes.new(name='NativeColor',type='BYTE_COLOR',domain='CORNER')
+        # Adding a corner attribute can reallocate Blender's layer storage.
+        # Retrieve the UV layer afterwards; a stale RNA handle corrupts memory.
+        uv=mesh.uv_layers['UVMap']
         for polygon,t in zip(mesh.polygons,faces):
             polygon.material_index=t.material
             for li in polygon.loop_indices:

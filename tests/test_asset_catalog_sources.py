@@ -45,4 +45,17 @@ class SourcesTests(unittest.TestCase):
     def test_invalid_img_offsets(self):
         p=self.root/'bad.img';p.write_bytes(b'VER2'+struct.pack('<I',1)+struct.pack('<IHH',99,1,0)+b'x.txd'.ljust(24,b'\0'))
         with self.assertRaises(ValueError):list(s.img_entries(p))
+    def test_iii_dat_and_external_img_directory(self):
+        (self.game/'DATA/GTA.DAT').rename(self.game/'DATA/GTA3.DAT')
+        p=self.game/'MODELS/gta3.img';p.write_bytes(txd().ljust(2048,b'\0'))
+        p.with_suffix('.DIR').write_bytes(struct.pack('<II24s',0,1,b'fixture.txd'))
+        r=s.inventory(self.game,self.root/'iii',game_id='iii')
+        self.assertEqual((r['game'],r['models'],r['textures'],r['failures']),('iii',2,1,[]))
+        self.assertEqual(list(s.img_entries(p)),[('fixture.txd',0,2048)])
+    def test_img_v1_bounds_traversal_duplicates_and_partial_records(self):
+        p=self.root/'x.img';p.write_bytes(bytes(2048));directory=p.with_suffix('.dir')
+        cases=[b'bad',struct.pack('<II24s',1,1,b'x.txd'),struct.pack('<II24s',0,0,b'x.txd'),struct.pack('<II24s',0,1,b'../x.txd'),struct.pack('<II24s',0,1,b'x.txd')*2]
+        for rows in cases:
+            directory.write_bytes(rows)
+            with self.assertRaises(ValueError):list(s.img_entries(p))
 if __name__=='__main__':unittest.main()

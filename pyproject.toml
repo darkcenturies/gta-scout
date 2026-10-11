@@ -24,7 +24,11 @@ asset-catalog-shortlist = "asset_catalog_shortlist:main"
 asset-catalog-revision = "asset_catalog_revision:main"
 asset-catalog-pack = "asset_catalog_pack:main"
 asset-catalog-evaluate = "asset_catalog_evaluate:main"
+asset-catalog-character = "asset_catalog_character:main"
 
 [tool.setuptools]
 package-dir = {"" = "scripts"}
-py-modules = ["asset_catalog", "asset_catalog_dragon", "asset_catalog_sources", "asset_catalog_visual", "asset_catalog_semantic", "asset_catalog_shortlist", "asset_catalog_revision", "asset_catalog_campaign", "asset_catalog_transfer_pixels", "asset_catalog_image_signal", "asset_catalog_uv_context", "asset_catalog_dedupe_cache", "asset_catalog_evaluate", "asset_catalog_pack"]
+py-modules = ["asset_catalog", "asset_catalog_dragon", "asset_catalog_sources", "asset_catalog_visual", "asset_catalog_semantic", "asset_catalog_shortlist", "asset_catalog_revision", "asset_catalog_campaign", "asset_catalog_transfer_pixels", "asset_catalog_image_signal", "asset_catalog_uv_context", "asset_catalog_dedupe_cache", "asset_catalog_evaluate", "asset_catalog_pack", "asset_catalog_character", "asset_catalog_character_compare"]
+
+[tool.setuptools.data-files]
+"share/gta-scout" = ["scripts/blender_character.py", "scripts/export_character_edits.py", "scripts/render-asset-catalog-views.py", "scripts/asset_catalog_character.py", "scripts/asset_catalog_dragon.py", "scripts/asset_catalog_image_signal.py"]

@@ -1,4 +1,4 @@
-"""Read-only classic PC San Andreas metadata adapter; emits no game binaries/pixels."""
+"""Read-only classic PC GTA metadata adapter; emits no game binaries/pixels."""
 import argparse
 import hashlib
 import json
@@ -61,7 +61,23 @@ def txd_names(data):
 def img_entries(path):
     with path.open('rb') as stream:
         header=stream.read(8)
-        if len(header)!=8 or header[:4]!=b'VER2': raise ValueError('Only IMG v2 supported')
+        if header[:4]!=b'VER2':
+            # III/VC store the 32-byte directory beside the sector-only IMG.
+            directory=relative_file(path.parent,path.stem+'.dir')
+            rows=directory.read_bytes();size=path.stat().st_size
+            if len(rows)%32:raise ValueError('Truncated IMG v1 directory')
+            names=set()
+            for index in range(0,len(rows),32):
+                sector,sectors=struct.unpack_from('<II',rows,index)
+                name=rows[index+8:index+32].split(b'\0')[0].decode('ascii')
+                if not name or '/' in name or '\\' in name or name in ('.','..'):raise ValueError('Invalid IMG entry name')
+                if name.casefold() in names:raise ValueError('Repeated IMG entry name')
+                names.add(name.casefold())
+                offset,length=sector*2048,sectors*2048
+                if not length or offset+length>size:raise ValueError('IMG entry out of bounds')
+                yield name,offset,length
+            return
+        if len(header)!=8:raise ValueError('Truncated IMG v2 header')
         count=struct.unpack_from('<I',header,4)[0]; size=path.stat().st_size
         if count>(size-8)//32: raise ValueError('Invalid IMG directory count')
         for index in range(count):
@@ -73,11 +89,12 @@ def img_entries(path):
             yield name,offset,length
 
 
-def inventory(game, output, extra_ides=(), extra_archives=()):
+def inventory(game, output, extra_ides=(), extra_archives=(), game_id='sa'):
     game=Path(game).resolve(); output=Path(output).resolve()
     if output.exists(): raise ValueError('Output exists; choose a new directory to preserve prior snapshots')
     if output.is_relative_to(game): raise ValueError('Output must be outside the game installation')
-    dat=relative_file(game,'data/gta.dat')
+    if game_id not in ('sa','iii','vc'):raise ValueError('Unsupported game')
+    dat=relative_file(game,{'sa':'data/gta.dat','iii':'data/gta3.dat','vc':'data/gta_vc.dat'}[game_id])
     ides=[relative_file(game,'data/default.ide')]
     for line in dat.read_text(encoding='latin1').splitlines():
         line=line.split('#',1)[0].strip()
@@ -115,8 +132,8 @@ def inventory(game, output, extra_ides=(), extra_archives=()):
         except (ValueError,UnicodeError,struct.error) as error: failures.append({'source':str(archive),'error':str(error)})
     for path in sorted(folder.rglob('*')):
         if path.is_file() and path.suffix.lower()=='.txd': read_dictionary(path.read_bytes(),path.stem,str(path))
-    result={'adapter':'classic-pc-sa-v1','gameRoot':str(game),'models':len(models),'textures':len(textures),'failures':failures,'sourceIDEs':provenance,
-            'scope':'Active GTA.dat IDEs plus default.ide and explicit extras; IMG v2 and loose PC TXD metadata. No rendered evidence, semantic labels, placement graph, or standalone DFF/clothing census.'}
+    result={'adapter':'classic-pc-'+game_id+'-v2','game':game_id,'gameRoot':str(game),'models':len(models),'textures':len(textures),'failures':failures,'sourceIDEs':provenance,
+            'scope':'Active game DAT IDEs plus default.ide and explicit extras; IMG v1/v2 and loose PC TXD metadata. Mod Loader priority is not resolved. No rendered evidence, semantic labels, placement graph, or standalone DFF/clothing census.'}
     for name, value in [('models/data/models.json',{'models':list(models.values())}),('textures/data/textures.json',{'textures':textures}),('source-report.json',result)]:
         target=output/name; target.parent.mkdir(parents=True,exist_ok=True); target.write_text(json.dumps(value,indent=2)+'\n')
     return result
@@ -125,8 +142,9 @@ def inventory(game, output, extra_ides=(), extra_archives=()):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--game-root',required=True);parser.add_argument('--out',required=True)
+    parser.add_argument('--game',choices=('sa','iii','vc'),default='sa')
     parser.add_argument('--ide',action='append',default=[]);parser.add_argument('--archive',action='append',default=[])
     args=parser.parse_args()
-    print(json.dumps(inventory(args.game_root,args.out,args.ide,args.archive),indent=2))
+    print(json.dumps(inventory(args.game_root,args.out,args.ide,args.archive,args.game),indent=2))
 
 if __name__=='__main__': main()

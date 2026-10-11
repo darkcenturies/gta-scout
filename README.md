@@ -272,3 +272,12 @@ Default tests generate synthetic fixtures in temporary directories and need no g
 ## License and data
 
 Original tool code: [MIT](LICENSE). [Third-party notices](THIRD_PARTY_NOTICES.md) cover separately installed dependencies, including GPL-licensed DragonFF. The shared text annotations in `data/annotations/` are also provided under MIT. No DragonFF code, game binaries, texture packs, private catalog database, or review images are bundled. Demo screenshots illustrate modding work and retain the rights of their underlying game content; they are not an asset redistribution license. Not affiliated with Rockstar Games or Take-Two Interactive.
+
+## GTA III character heads
+
+For classic rigid Claude models, use the [GTA III character workflow](docs/gta3-character.md).
+It produces an editable Blender scene and fixed front/profile/rear head inspections,
+then exports bounded head-only vertex edits while preserving the body and rig.
+`asset-catalog-sources --game iii` additionally reads GTA III DAT/IDE files and
+external IMG v1 directories. This scoped III support does not establish the same
+asset extraction or annotation coverage as the existing SA pipeline.
