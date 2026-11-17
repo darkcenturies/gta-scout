@@ -1,5 +1,8 @@
 # Render local assets with Blender CLI
 
+For assembled placements and exported material parity, also use the explicit
+[scene audit](scene-audit.md). A preview alone does not validate runtime transforms.
+
 This bridge prepares **static DFF** previews. It does not replace your scene-building scripts or import a whole map. Install Blender separately (tested with the local Blender version in validation.md), Node.js 20+ for TXD extraction, and DragonFF separately:
 
 ```sh
