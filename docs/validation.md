@@ -1,5 +1,15 @@
 # Alpha validation
 
+## Scene contract audit, 2026-11-18
+
+Four new synthetic orientation/support/material tests passed on Windows with
+Python 3.11; two Node helper tests passed. The full Python run executed 220
+tests with two errors in untouched areas: Windows denied symlink creation,
+and the bundled annotation pack failed digest validation. One optional test
+skipped. This does not establish a clean full-suite result. The scene audit
+reports explicit numerical contracts only, leaving visual and runtime
+acceptance false. No game payload or local evidence is bundled.
+
 The [CP1 continuation](reports/cp1-2026-09-08-continuation.md) passes **197 Python
 tests with the real encoder and 2 Node tests**. Real development recall reaches
 20/22 after actual image review and source-verified transfers. This is a tuned
